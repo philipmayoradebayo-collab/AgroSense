@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AgroSense NG - Login</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+</head>
+<body>
+
+<div class="auth-container">
+
+    <div class="auth-card">
+
+        <h1>🌿 AgroSense NG</h1>
+
+        <h3>Login</h3>
+
+        <form id="login-form">
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Email Address"
+                required
+            >
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                required
+            >
+
+            <div id="login-message" class="message"></div>
+
+            <button type="submit">
+                Login
+            </button>
+        </form>
+
+        <p style="margin-top:15px;">
+            <a href="/accounts/password-reset/">
+                Forgot Password?
+            </a>
+        </p>
+
+        <hr>
+        <p>
+            Don't have an account?
+            <a href="/accounts/register-page/">
+                Register
+            </a>
+        </p>
+
+
+    </div>
+
+</div>
+
+<p>
+
+
+
+<script src="{% static 'js/auth.js' %}"></script>
+
+</body>
+</html>

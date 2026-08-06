@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AgroSense NG{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+
+<nav class="landing-nav">
+
+    <div class="logo">
+        🌿 AgroSense NG
+    </div>
+
+    <div class="nav-links">
+
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+
+        <a href="{% url 'login' %}" class="btn-secondary">
+            Login
+        </a>
+
+    </div>
+
+</nav>
+
+
+<section class="hero">
+
+    <div class="overlay"></div>
+
+    <div class="hero-content">
+
+        <h1>
+            Smart Farming Powered by Artificial Intelligence
+        </h1>
+
+        <p>
+
+            AgroSense NG helps Nigerian farmers make better farming
+            decisions through AI-powered crop recommendation,
+            weather prediction and intelligent crop advisory.
+
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="{% url 'register_page' %}" class="btn-primary">
+                Get Started
+            </a>
+
+
+            <a href="{% url 'login' %}" class="btn-secondary">
+                Login
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="stats">
+
+    <div class="stat-card">
+
+        <h2>99.55%</h2>
+
+        <p>Crop Prediction Accuracy</p>
+
+    </div>
+
+    <div class="stat-card">
+
+        <h2>0.0018</h2>
+
+        <p>Weather Model Error</p>
+
+    </div>
+
+    <div class="stat-card">
+
+        <h2>131,480</h2>
+
+        <p>Training Records</p>
+
+    </div>
+
+    <div class="stat-card">
+
+        <h2>36</h2>
+
+        <p>Nigerian States</p>
+
+    </div>
+
+</section>
+
+
+<section id="features" class="features">
+
+    <h2>What AgroSense NG Can Do</h2>
+
+    <div class="feature-grid">
+
+        <div class="feature-card">
+
+            <span>🌱</span>
+
+            <h3>Crop Recommendation</h3>
+
+            <p>
+
+                Predicts the best crop using soil nutrients,
+                pH, rainfall, humidity and temperature.
+
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <span>🌦</span>
+
+            <h3>Weather Prediction</h3>
+
+            <p>
+
+                Forecast future temperature and rainfall
+                using AI models.
+
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <span>📄</span>
+
+            <h3>CSV Upload</h3>
+
+            <p>
+
+                Upload farm records in CSV format
+                for instant prediction.
+
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <span>🧠</span>
+
+            <h3>Crop Intelligence</h3>
+
+            <p>
+
+                Learn planting seasons, diseases,
+                fertilizers and market prices.
+
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <span>☁</span>
+
+            <h3>Live Weather</h3>
+
+            <p>
+
+                Automatically fetch weather
+                from your registered state.
+
+            </p>
+
+        </div>
+
+        <div class="feature-card">
+
+            <span>📊</span>
+
+            <h3>Prediction History</h3>
+
+            <p>
+
+                Save and review all predictions
+                anytime.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ABOUT -->
+
+<section id="about" class="about">
+
+    <div>
+
+        <img src="{% static 'images/farm.jpg' %}" alt="Farmer">
+
+    </div>
+
+    <div>
+
+        <h2>Why AgroSense NG?</h2>
+
+        <p>
+
+            AgroSense NG is an Artificial Intelligence-based decision
+            support system developed to help Nigerian farmers improve
+            productivity and reduce crop failure.
+
+        </p>
+
+        <p>
+
+            The system combines Machine Learning, live weather
+            information and crop intelligence to provide reliable
+            recommendations for better farming decisions.
+
+        </p>
+
+        <p>✔ AI Crop Recommendation</p>
+
+        <p>✔ Weather Prediction</p>
+
+        <p>✔ Crop Intelligence</p>
+
+        <p>✔ CSV Prediction Support</p>
+
+        <p>✔ Prediction History</p>
+
+    </div>
+
+</section>
+
+
+<!-- CALL TO ACTION -->
+
+<section class="cta">
+
+    <h2>
+
+        Start Farming Smarter Today
+
+    </h2>
+
+    <p>
+
+        Join thousands of farmers using Artificial Intelligence
+        to improve agricultural productivity.
+
+    </p>
+
+   
+        <a href="{% url 'register_page' %}" class="btn-primary">
+        Get Started
+    </a>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+    <h2>🌿 AgroSense NG</h2>
+
+    <p>
+
+        AI-Based Microclimate Prediction &
+        Crop Recommendation System
+
+    </p>
+
+    <p>
+
+        © 2026 AgroSense NG. All Rights Reserved.
+
+    </p>
+
+</footer>
+
+{% endblock %}

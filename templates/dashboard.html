@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<script>
+console.log("Dashboard HTML Loaded");
+</script>
+<nav class="navbar">
+
+    <h1>🌿 AgroSense NG</h1>
+
+    <a href="/dashboard/history/" style="color:#fff; text-decoration:none;">Prediction History</a>
+
+    <div class="nav-right">
+        <span><b>User:</b> <span id="user-name"></span></span>
+        <span><b>State:</b> <span id="user-state"></span></span>
+        <span id="clock"></span>
+        <button type="button" id="logout-btn" class="btn">Logout</button>
+    </div>
+
+
+</nav>
+
+<div class="container">
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <div class="value">0.99%</div>
+            <div class="label">Model Accuracy</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="value">0.0018</div>
+            <div class="label">Weather MSE</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="value">2,200</div>
+            <div class="label">Training Records</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="value">36</div>
+            <div class="label">States Covered in Nigeria</div>
+        </div>
+
+    </div>
+
+    <div class="cards">
+
+   <div class="card">
+
+    <h2>🌱 Crop Recommendation</h2>
+
+    <!-- Toggle Buttons -->
+
+    <div class="input-switch">
+
+        <button
+            type="button"
+            id="manual-btn"
+            class="btn"
+        >
+            Manual Input
+        </button>
+
+        <button
+            type="button"
+            id="csv-btn"
+            class="btn"
+        >
+            Upload CSV
+        </button>
+
+    </div>
+
+    <br>
+
+    <!-- ========================= -->
+    <!-- Manual Input Section -->
+    <!-- ========================= -->
+
+    <div id="manual-section">
+
+            <form id="crop-form">
+
+                <div class="form-group">
+                    <input
+                        type="number"
+                        id="N"
+                        step="any"
+                        placeholder="Nitrogen (N)"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input
+                        type="number"
+                        id="P"
+                        step="any"
+                        placeholder="Phosphorus (P)"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input
+                        type="number"
+                        id="K"
+                        step="any"
+                        placeholder="Potassium (K)"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input
+                        type="number"
+                        id="temperature"
+                        step="any"
+                        placeholder="Temperature (°C)"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input
+                        type="number"
+                        id="humidity"
+                        step="any"
+                        placeholder="Humidity (%)"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input
+                        type="number"
+                        id="ph"
+                        step="any"
+                        placeholder="Soil pH"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input
+                        type="number"
+                        id="rainfall"
+                        step="any"
+                        placeholder="Rainfall (mm)"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn"
+                >
+                    Get Recommendation
+                </button>
+
+            </form>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- CSV Upload Section -->
+        <!-- ========================= -->
+
+        <div
+            id="csv-section"
+            style="display:none;"
+        >
+
+            <div class="form-group">
+
+                <input
+                    type="file"
+                    id="crop_csv"
+                    accept=".csv"
+                >
+
+            </div>
+
+            <button
+                type="button"
+                id="upload-csv-btn"
+                class="btn"
+            >
+                Upload CSV & Predict
+            </button>
+
+        </div>
+
+        <hr>
+
+        <!-- ========================= -->
+        <!-- Result -->
+        <!-- ========================= -->
+
+        <div
+            id="crop-result"
+            class="result"
+            style="display:none;"
+        >
+
+            <h3>🌾 Recommended Crop</h3>
+
+            <h2 id="recommended_crop"></h2>
+
+            <p>
+
+                Confidence:
+                <strong id="confidence"></strong>
+
+            </p>
+
+            <h3>🧪 NPK Recommendation</h3>
+
+            <p>
+                Nitrogen (N):
+                <span id="npkN"></span>
+            </p>
+
+            <p>
+                Phosphorus (P):
+                <span id="npkP"></span>
+            </p>
+
+            <p>
+                Potassium (K):
+                <span id="npkK"></span>
+            </p>
+
+        </div>
+
+    </div>
+
+        <!-- Weather -->
+
+        <div class="card">
+            <h2>🌤 Weather Prediction</h2>
+
+            <form id="weather-form">
+
+                <button
+                    type="button"
+                    id="refresh-weather"
+                    class="btn"
+                >
+                    🔄 Refresh Live Weather
+                </button>
+
+                <br><br>
+
+                <p style="color:#2e7d32;font-size:14px;">
+                    Weather information is automatically fetched based on your registered state.
+                    Only <strong>Solar Radiation</strong> and <strong>Soil Moisture</strong>
+                    need to be entered manually.
+                </p>
+
+                <div class="form-group">
+                    <label>Average Temperature (°C)</label>
+                    <input
+                        type="number"
+                        id="temp_avg"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Maximum Temperature (°C)</label>
+                    <input
+                        type="number"
+                        id="temp_max"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Minimum Temperature (°C)</label>
+                    <input
+                        type="number"
+                        id="temp_min"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Humidity (%)</label>
+                    <input
+                        type="number"
+                        id="weather_humidity"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Rainfall (mm)</label>
+                    <input
+                        type="number"
+                        id="weather_rainfall"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Wind Speed (m/s)</label>
+                    <input
+                        type="number"
+                        id="wind_speed"
+                        readonly
+                    >
+                </div>
+
+                <hr>
+
+                <h4>Manual Inputs</h4>
+
+                <div class="form-group">
+                    <label>Solar Radiation (MJ/m²/day)</label>
+                    <input
+                        type="number"
+                        id="solar_radiation"
+                        placeholder="Enter Solar Radiation"
+                        step="0.01"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Soil Moisture (%)</label>
+                    <input
+                        type="number"
+                        id="soil_moisture"
+                        placeholder="Enter Soil Moisture"
+                        step="0.01"
+                        required
+                    >
+                </div>
+
+                <hr>
+
+                <div class="form-group">
+                    <label>Month</label>
+                    <input
+                        type="number"
+                        id="month"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Day of Year</label>
+                    <input
+                        type="number"
+                        id="day_of_year"
+                        readonly
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Season</label>
+
+                    <select id="is_rainy_season" disabled>
+
+                        <option value="1">
+                            🌧 Rainy Season
+                        </option>
+
+                        <option value="0">
+                            ☀ Dry Season
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button class="btn" type="submit">
+                    🌤 Predict Weather
+                </button>
+
+            </form>
+
+        <div
+            id="weather-result"
+            class="result"
+            style="display:none"
+        >
+
+            <h3>🌦 Weather Prediction Result</h3>
+
+            <p>
+                Predicted Temperature:
+                <strong id="predicted_temperature"></strong>
+            </p>
+
+            <p>
+                Predicted Rainfall:
+                <strong id="predicted_rainfall"></strong>
+            </p>
+
+        </div>
+
+        </div> <!-- End Weather Card -->
+
+    </div>   <!-- CLOSE WEATHER CARD -->
+
+    <div class="card">
+
+    <h2>🔍 Crop Intelligence</h2>
+
+        <form id="crop-intelligence-form">
+
+            <div class="form-group">
+                <input id="crop_name" type="text" placeholder="Enter Crop Name">
+            </div>
+
+            <div class="form-group">
+                <select id="state">
+
+                    <option value="Nigeria">Nigeria</option>
+                    <option value="Abia">Abia</option>
+                    <option value="Adamawa">Adamawa</option>
+                    <option value="AkwaIbom">Akwa Ibom</option>
+                    <option value="Anambra">Anambra</option>
+                    <option value="Bauchi">Bauchi</option>
+                    <option value="Bayelsa">Bayelsa</option>
+                    <option value="Benue">Benue</option>
+                    <option value="Borno">Borno</option>
+                    <option value="CrossRiver">Cross River</option>
+                    <option value="Delta">Delta</option>
+                    <option value="Ebonyi">Ebonyi</option>
+                    <option value="Edo">Edo</option>
+                    <option value="Ekiti">Ekiti</option>
+                    <option value="Enugu">Enugu</option>
+                    <option value="FCT">FCT</option>
+                    <option value="Gombe">Gombe</option>
+                    <option value="Imo">Imo</option>
+                    <option value="Jigawa">Jigawa</option>
+                    <option value="Kaduna">Kaduna</option>
+                    <option value="Kano">Kano</option>
+                    <option value="Katsina">Katsina</option>
+                    <option value="Kebbi">Kebbi</option>
+                    <option value="Kogi">Kogi</option>
+                    <option value="Kwara">Kwara</option>
+                    <option value="Lagos">Lagos</option>
+                    <option value="Nasarawa">Nasarawa</option>
+                    <option value="Niger">Niger</option>
+                    <option value="Ogun">Ogun</option>
+                    <option value="Ondo">Ondo</option>
+                    <option value="Osun">Osun</option>
+                    <option value="Oyo">Oyo</option>
+                    <option value="Plateau">Plateau</option>
+                    <option value="Rivers">Rivers</option>
+                    <option value="Sokoto">Sokoto</option>
+                    <option value="Taraba">Taraba</option>
+                    <option value="Yobe">Yobe</option>
+                    <option value="Zamfara">Zamfara</option>
+
+                </select>
+            </div>
+
+            <button class="btn" type="submit">
+                Search Crop
+            </button>
+
+        </form>
+
+        <div id="crop-guide"></div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/crop.js' %}"></script>
+<script src="{% static 'js/weather.js' %}"></script>
+<script src="{% static 'js/crop_intelligence.js' %}"></script>
+
+{% endblock %}
