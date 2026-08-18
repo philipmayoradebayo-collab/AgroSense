@@ -2,10 +2,6 @@ console.log("auth.js loaded");
 
 const API = "/accounts";
 
-// ======================
-// LOGIN
-// ======================
-
 const loginForm = document.getElementById("login-form");
 
 console.log("Login form:", loginForm);
@@ -18,7 +14,7 @@ if (loginForm) {
 
         const msg = document.getElementById("login-message");
 
-        // Hide previous message
+    
         msg.className = "message";
         msg.innerText = "";
 
@@ -81,9 +77,7 @@ if (loginForm) {
 
 }
 
-// ======================
-// REGISTER
-// ======================
+
 
 const registerForm = document.getElementById("register-form");
 
