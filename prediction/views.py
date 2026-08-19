@@ -3,7 +3,6 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-import torch
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -165,7 +164,7 @@ def predict_weather(request):
                 dtype=np.float32
             )
         ).reshape(1, 30, 11)
-
+        import torch
         tensor = torch.FloatTensor(scaled)
 
         with torch.no_grad():
