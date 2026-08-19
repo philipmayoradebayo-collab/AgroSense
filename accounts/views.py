@@ -1,15 +1,16 @@
 from .models import Farmer
-from django.shortcuts import render
+
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import send_mail
-from django.conf import settings
+
 from django.contrib.auth.models import User
 from django.contrib.auth import (
     authenticate,
     login as auth_login,
     logout as auth_logout,
 )
+
 from django.contrib.auth.decorators import login_required
 
 import json
@@ -32,7 +33,10 @@ def register(request):
 
         data = json.loads(request.body)
 
+        # ==========================================
         # Validate required fields
+        # ==========================================
+
         required_fields = [
             "full_name",
             "email",
@@ -43,15 +47,32 @@ def register(request):
         ]
 
         for field in required_fields:
+
             if not data.get(field):
+
                 return JsonResponse(
                     {"error": f"{field} is required"},
                     status=400,
                 )
 
+        # ==========================================
+        # Clean data
+        # ==========================================
+
+        email = data["email"].strip().lower()
+
+        full_name = data["full_name"].strip()
+
+        phone = data["phone"].strip()
+
+        state = data["state"].strip()
+
+        # ==========================================
         # Check if email already exists
+        # ==========================================
+
         if User.objects.filter(
-            username=data["email"]
+            username=email
         ).exists():
 
             return JsonResponse(
@@ -59,74 +80,88 @@ def register(request):
                 status=400,
             )
 
-        # Create user
-        user = User.objects.create_user(
-            username=data["email"],
-            email=data["email"],
-            password=data["password"],
-            first_name=data["full_name"],
-        )
-
-        # Create farmer profile
-        Farmer.objects.create(
-            user=user,
-            phone=data["phone"],
-            state=data["state"],
-            farm_size=float(data["farm_size"]),
-        )
-
         # ==========================================
-        # Send welcome email
+        # Validate farm size
         # ==========================================
 
         try:
 
-            send_mail(
-                "Welcome to AgroSense NG",
-
-                f"""Hello {user.first_name},
-
-Welcome to AgroSense NG!
-
-Your account has been created successfully.
-
-Thank you for registering.
-
-Regards,
-AgroSense NG Team
-""",
-
-                settings.DEFAULT_FROM_EMAIL,
-
-                [user.email],
-
-                fail_silently=True,
+            farm_size = float(
+                data["farm_size"]
             )
 
-            print(
-                f"Welcome email attempted for {user.email}"
+            if farm_size <= 0:
+
+                return JsonResponse(
+                    {"error": "Farm size must be greater than 0"},
+                    status=400,
+                )
+
+        except (ValueError, TypeError):
+
+            return JsonResponse(
+                {"error": "Invalid farm size"},
+                status=400,
             )
 
-        except Exception as email_error:
+        # ==========================================
+        # Create user
+        # ==========================================
 
-            print(
-                f"EMAIL ERROR: {email_error}"
-            )
+        user = User.objects.create_user(
+
+            username=email,
+
+            email=email,
+
+            password=data["password"],
+
+            first_name=full_name,
+
+        )
+
+        # ==========================================
+        # Create farmer profile
+        # ==========================================
+
+        Farmer.objects.create(
+
+            user=user,
+
+            phone=phone,
+
+            state=state,
+
+            farm_size=farm_size,
+
+        )
 
         # ==========================================
         # Registration successful
         # ==========================================
 
+        print(
+            f"Registration successful for {email}"
+        )
+
         return JsonResponse(
+
             {
                 "message": "Registration successful!",
+
                 "user": {
+
                     "id": user.id,
+
                     "full_name": user.first_name,
+
                     "email": user.email,
+
                 }
             },
+
             status=201,
+
         )
 
     except json.JSONDecodeError:
@@ -136,31 +171,38 @@ AgroSense NG Team
             status=400,
         )
 
-    except ValueError:
-
-        return JsonResponse(
-            {"error": "Invalid farm size"},
-            status=400,
-        )
-
     except Exception as e:
 
         print(
-            f"REGISTRATION ERROR: {e}"
+            "========== REGISTRATION ERROR =========="
+        )
+
+        print(
+            f"{type(e).__name__}: {e}"
+        )
+
+        print(
+            "========================================"
         )
 
         return JsonResponse(
-            {"error": str(e)},
+
+            {"error": "Registration failed. Please try again."},
+
             status=500,
+
         )
-    
+
+
 # ==========================================
 # Login
 # ==========================================
+
 @csrf_exempt
 def login(request):
 
     if request.method != "POST":
+
         return JsonResponse(
             {"error": "POST request required"},
             status=405,
@@ -170,22 +212,44 @@ def login(request):
 
         data = json.loads(request.body)
 
+        email = data["email"].strip().lower()
+
+        password = data["password"]
+
+        # ==========================================
+        # Authenticate user
+        # ==========================================
+
         user = authenticate(
-            username=data["email"],
-            password=data["password"],
+
+            username=email,
+
+            password=password,
+
         )
 
         if user is None:
+
             return JsonResponse(
                 {"error": "Invalid email or password"},
                 status=401,
             )
 
+        # ==========================================
         # Create Django session
+        # ==========================================
+
         auth_login(request, user)
 
-        print("Authenticated:", request.user.is_authenticated)
-        print("Session Key:", request.session.session_key)
+        print(
+            "Authenticated:",
+            request.user.is_authenticated
+        )
+
+        print(
+            "Session Key:",
+            request.session.session_key
+        )
 
         return JsonResponse({
 
@@ -194,27 +258,38 @@ def login(request):
             "redirect": "/dashboard/",
 
             "user": {
+
                 "id": user.id,
+
                 "full_name": user.first_name,
+
                 "email": user.email,
+
             }
 
         })
 
     except Exception as e:
 
+        print(
+            f"LOGIN ERROR: {e}"
+        )
+
         return JsonResponse(
-            {"error": str(e)},
+            {"error": "Login failed. Please try again."},
             status=500,
         )
 
 
-from django.contrib.auth import logout as auth_logout
-from django.shortcuts import redirect
+# ==========================================
+# Logout
+# ==========================================
 
 @login_required
 def logout(request):
+
     auth_logout(request)
+
     return redirect("/")
 
 
@@ -225,38 +300,70 @@ def logout(request):
 @login_required
 def profile(request):
 
-    print("Logged in user:", request.user.username)
+    print(
+        "Logged in user:",
+        request.user.username
+    )
 
     try:
+
         farmer = request.user.farmer
 
-        print("Farmer found:", farmer)
+        print(
+            "Farmer found:",
+            farmer
+        )
 
         return JsonResponse({
+
             "id": request.user.id,
+
             "full_name": request.user.first_name,
+
             "email": request.user.email,
+
             "phone": farmer.phone,
+
             "state": farmer.state,
+
             "farm_size": farmer.farm_size,
+
         })
 
     except Farmer.DoesNotExist:
 
-        print("No Farmer profile for:", request.user.username)
+        print(
+            "No Farmer profile for:",
+            request.user.username
+        )
 
         return JsonResponse(
+
             {
-                "error": "Farmer profile does not exist."
+                "error":
+                "Farmer profile does not exist."
             },
+
             status=404,
+
         )
+
+
 # ==========================================
 # HTML Pages
 # ==========================================
+
 def login_page(request):
-    return render(request, "login.html")
+
+    return render(
+        request,
+        "login.html"
+    )
 
 
 def register_page(request):
-    return render(request, "register.html")
+
+    return render(
+        request,
+        "register.html"
+    )
