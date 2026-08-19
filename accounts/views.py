@@ -32,12 +32,34 @@ def register(request):
 
         data = json.loads(request.body)
 
-        if User.objects.filter(username=data["email"]).exists():
+        # Validate required fields
+        required_fields = [
+            "full_name",
+            "email",
+            "phone",
+            "state",
+            "farm_size",
+            "password",
+        ]
+
+        for field in required_fields:
+            if not data.get(field):
+                return JsonResponse(
+                    {"error": f"{field} is required"},
+                    status=400,
+                )
+
+        # Check if email already exists
+        if User.objects.filter(
+            username=data["email"]
+        ).exists():
+
             return JsonResponse(
                 {"error": "Email already registered"},
                 status=400,
             )
 
+        # Create user
         user = User.objects.create_user(
             username=data["email"],
             email=data["email"],
@@ -45,6 +67,7 @@ def register(request):
             first_name=data["full_name"],
         )
 
+        # Create farmer profile
         Farmer.objects.create(
             user=user,
             phone=data["phone"],
@@ -52,35 +75,80 @@ def register(request):
             farm_size=float(data["farm_size"]),
         )
 
+        # ==========================================
         # Send welcome email
-        send_mail(
-            "Welcome to AgroSense NG",
-            f"""Hello {user.first_name},
+        # ==========================================
 
-                Welcome to AgroSense NG!
+        try:
 
-                Your account has been created successfully.
+            send_mail(
+                "Welcome to AgroSense NG",
 
-                Thank you for registering.
+                f"""Hello {user.first_name},
 
-                Regards,
-                AgroSense NG Team
-                """,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
+Welcome to AgroSense NG!
+
+Your account has been created successfully.
+
+Thank you for registering.
+
+Regards,
+AgroSense NG Team
+""",
+
+                settings.DEFAULT_FROM_EMAIL,
+
+                [user.email],
+
+                fail_silently=True,
+            )
+
+            print(
+                f"Welcome email attempted for {user.email}"
+            )
+
+        except Exception as email_error:
+
+            print(
+                f"EMAIL ERROR: {email_error}"
+            )
+
+        # ==========================================
+        # Registration successful
+        # ==========================================
+
+        return JsonResponse(
+            {
+                "message": "Registration successful!",
+                "user": {
+                    "id": user.id,
+                    "full_name": user.first_name,
+                    "email": user.email,
+                }
+            },
+            status=201,
         )
 
-        return JsonResponse({
-            "message": "Registration successful!",
-            "user": {
-                "id": user.id,
-                "full_name": user.first_name,
-                "email": user.email,
-            }
-        })
+    except json.JSONDecodeError:
+
+        return JsonResponse(
+            {"error": "Invalid JSON data"},
+            status=400,
+        )
+
+    except ValueError:
+
+        return JsonResponse(
+            {"error": "Invalid farm size"},
+            status=400,
+        )
 
     except Exception as e:
+
+        print(
+            f"REGISTRATION ERROR: {e}"
+        )
+
         return JsonResponse(
             {"error": str(e)},
             status=500,
