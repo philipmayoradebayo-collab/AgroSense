@@ -89,7 +89,6 @@ if (registerForm) {
 
         const msg = document.getElementById("register-message");
 
-        // Get form values
         const payload = {
             full_name: document.getElementById("full_name").value.trim(),
             email: document.getElementById("email").value.trim(),
@@ -99,7 +98,6 @@ if (registerForm) {
             password: document.getElementById("password").value
         };
 
-        // Basic validation
         if (
             !payload.full_name ||
             !payload.email ||
@@ -113,14 +111,10 @@ if (registerForm) {
             return;
         }
 
-        // Show loading message
         msg.className = "message";
         msg.innerText = "Creating your account...";
 
         try {
-
-            console.log("Sending registration data:", payload);
-            console.log("API URL:", API + "/register/");
 
             const response = await fetch(API + "/register/", {
 
@@ -135,32 +129,26 @@ if (registerForm) {
 
             });
 
-            // Read response as text first
             const text = await response.text();
 
-            console.log("HTTP Status:", response.status);
-            console.log("Server Response:", text);
+            console.log("Status:", response.status);
+            console.log("Response:", text);
 
             let data = {};
 
-            // Try to convert response to JSON
             try {
                 data = JSON.parse(text);
-            } catch (jsonError) {
+            } catch (error) {
 
-                console.error("Response is not valid JSON:", jsonError);
+                console.error("Invalid JSON response:", error);
 
                 msg.className = "message error";
-
                 msg.innerText =
-                    "Server returned an invalid response. Check the browser console.";
+                    "Server returned an invalid response. Check the console.";
 
                 return;
             }
 
-            console.log("Parsed response:", data);
-
-            // Successful registration
             if (response.ok) {
 
                 msg.className = "message success";
@@ -169,17 +157,13 @@ if (registerForm) {
                     data.message ||
                     "Registration successful! Redirecting to login...";
 
-                // Redirect to login page
                 setTimeout(() => {
 
                     window.location.href = "/accounts/login-page/";
 
                 }, 1500);
 
-            }
-
-            // Registration failed
-            else {
+            } else {
 
                 msg.className = "message error";
 
@@ -187,26 +171,22 @@ if (registerForm) {
                     data.error ||
                     data.detail ||
                     data.message ||
-                    "Registration failed. Please check your information.";
+                    "Registration failed.";
 
                 console.error("Registration error:", data);
             }
 
-        }
+        } catch (err) {
 
-        // Network/server connection error
-        catch (err) {
-
-            console.error("Fetch error:", err);
+            console.error("Connection error:", err);
 
             msg.className = "message error";
 
             msg.innerText =
-                "Unable to connect to the server. Please try again.";
+                "Registration failed. Please try again.";
 
         }
 
     });
 
 }
-
