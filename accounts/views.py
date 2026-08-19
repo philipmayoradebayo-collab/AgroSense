@@ -13,7 +13,6 @@ from django.contrib.auth import (
 from django.contrib.auth.decorators import login_required
 
 import json
-from django.db import transaction
 
 
 # ==========================================
