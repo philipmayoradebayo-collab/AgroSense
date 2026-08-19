@@ -87,65 +87,126 @@ if (registerForm) {
 
         e.preventDefault();
 
-        const payload = {
+        const msg = document.getElementById("register-message");
 
-            full_name: document.getElementById("full_name").value,
-            email: document.getElementById("email").value,
-            phone: document.getElementById("phone").value,
+        // Get form values
+        const payload = {
+            full_name: document.getElementById("full_name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            phone: document.getElementById("phone").value.trim(),
             state: document.getElementById("state").value,
             farm_size: document.getElementById("farm_size").value,
             password: document.getElementById("password").value
-
         };
 
+        // Basic validation
+        if (
+            !payload.full_name ||
+            !payload.email ||
+            !payload.phone ||
+            !payload.state ||
+            !payload.farm_size ||
+            !payload.password
+        ) {
+            msg.className = "message error";
+            msg.innerText = "Please fill in all fields.";
+            return;
+        }
+
+        // Show loading message
+        msg.className = "message";
+        msg.innerText = "Creating your account...";
+
         try {
+
+            console.log("Sending registration data:", payload);
+            console.log("API URL:", API + "/register/");
 
             const response = await fetch(API + "/register/", {
 
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
                 },
 
                 body: JSON.stringify(payload)
 
             });
 
-            const data = await response.json();
+            // Read response as text first
+            const text = await response.text();
 
-            console.log(data);
+            console.log("HTTP Status:", response.status);
+            console.log("Server Response:", text);
 
+            let data = {};
 
-            const msg = document.getElementById("register-message");
+            // Try to convert response to JSON
+            try {
+                data = JSON.parse(text);
+            } catch (jsonError) {
 
+                console.error("Response is not valid JSON:", jsonError);
+
+                msg.className = "message error";
+
+                msg.innerText =
+                    "Server returned an invalid response. Check the browser console.";
+
+                return;
+            }
+
+            console.log("Parsed response:", data);
+
+            // Successful registration
             if (response.ok) {
 
                 msg.className = "message success";
-                msg.innerText = "Registration successful! Redirecting to login...";
 
+                msg.innerText =
+                    data.message ||
+                    "Registration successful! Redirecting to login...";
+
+                // Redirect to login page
                 setTimeout(() => {
+
                     window.location.href = "/accounts/login-page/";
+
                 }, 1500);
-
-            } else {
-
-                msg.className = "message error";
-                msg.innerText = data.error;
 
             }
 
-        } catch (err) {
+            // Registration failed
+            else {
 
-            console.error(err);
+                msg.className = "message error";
 
-            const msg = document.getElementById("register-message");
+                msg.innerText =
+                    data.error ||
+                    data.detail ||
+                    data.message ||
+                    "Registration failed. Please check your information.";
+
+                console.error("Registration error:", data);
+            }
+
+        }
+
+        // Network/server connection error
+        catch (err) {
+
+            console.error("Fetch error:", err);
 
             msg.className = "message error";
-            msg.innerText = "Registration failed. Please try again.";
+
+            msg.innerText =
+                "Unable to connect to the server. Please try again.";
 
         }
 
     });
 
 }
+
