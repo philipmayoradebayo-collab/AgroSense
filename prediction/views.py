@@ -1,19 +1,15 @@
-
-
-import pandas as pd
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from .services import get_weather
-from django.contrib.auth.decorators import login_required
-
 import json
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import torch
 
-from datetime import datetime
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
+from .services import get_weather
 
 from .models import (
     CropInformation,
@@ -21,10 +17,10 @@ from .models import (
 )
 
 from .my_models import (
-    scaler,
-    label_encoder,
-    lstm_weather_model,
-    crop_model,
+    get_scaler,
+    get_label_encoder,
+    get_weather_model,
+    get_crop_model,
 )
 
 
@@ -55,13 +51,20 @@ def predict_crop(request):
             "rainfall": float(data["rainfall"]),
         }])
 
+        # Load ML models only when prediction is requested
+        crop_model = get_crop_model()
+        label_encoder = get_label_encoder()
+
         prediction = crop_model.predict(input_df)
 
         crop_name = label_encoder.inverse_transform(prediction)[0]
 
         probabilities = crop_model.predict_proba(input_df)[0]
 
-        confidence = round(float(max(probabilities)) * 100, 2)
+        confidence = round(
+            float(max(probabilities)) * 100,
+            2
+        )
 
         try:
 
@@ -85,7 +88,6 @@ def predict_crop(request):
                 "application": "Consult local agronomist",
             }
 
-        # Save prediction history
         PredictionHistory.objects.create(
 
             farmer=request.user.farmer,
@@ -108,7 +110,9 @@ def predict_crop(request):
 
             "input_received": data,
 
-            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "time": datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
 
         })
 
@@ -151,8 +155,15 @@ def predict_weather(request):
             int(data["is_rainy_season"]),
         ]]
 
+        # Load models only when weather prediction is requested
+        scaler = get_scaler()
+        lstm_weather_model = get_weather_model()
+
         scaled = scaler.transform(
-            np.array(input_data * 30, dtype=np.float32)
+            np.array(
+                input_data * 30,
+                dtype=np.float32
+            )
         ).reshape(1, 30, 11)
 
         tensor = torch.FloatTensor(scaled)
@@ -163,18 +174,26 @@ def predict_weather(request):
 
             pred = prediction.numpy()[0]
 
-        temperature = round(float(pred[0]) * 50, 2)
+        temperature = round(
+            float(pred[0]) * 50,
+            2
+        )
 
-        rainfall = round(float(pred[1]) * 300, 2)
+        rainfall = round(
+            float(pred[1]) * 300,
+            2
+        )
 
-        # Save prediction history
         PredictionHistory.objects.create(
 
             farmer=request.user.farmer,
 
             prediction_type="weather",
 
-            result=f"Temperature: {temperature}°C | Rainfall: {rainfall} mm",
+            result=(
+                f"Temperature: {temperature}°C | "
+                f"Rainfall: {rainfall} mm"
+            ),
 
         )
 
@@ -317,7 +336,9 @@ def crop_intelligence(request):
         )
 
 
-
+# ==========================================
+# Live Weather
+# ==========================================
 @login_required
 def live_weather(request):
 
@@ -325,48 +346,77 @@ def live_weather(request):
 
     weather = get_weather(farmer.state)
 
-    return JsonResponse(weather)   
+    return JsonResponse(weather)
 
 
-
+# ==========================================
+# CSV Upload
+# ==========================================
 @csrf_exempt
 def upload_csv(request):
+
     print("========== upload_csv CALLED ==========")
 
     if request.method != "POST":
-        return JsonResponse({"error": "POST only"}, status=405)
+        return JsonResponse(
+            {"error": "POST only"},
+            status=405
+        )
 
-    file = request.FILES["file"]
+    try:
 
-    df = pd.read_csv(file)
+        file = request.FILES["file"]
 
-    row = df.iloc[0]
+        df = pd.read_csv(file)
 
-    input_df = pd.DataFrame([{
+        row = df.iloc[0]
 
-        "N": row["N"],
-        "P": row["P"],
-        "K": row["K"],
-        "temperature": row["temperature"],
-        "humidity": row["humidity"],
-        "ph": row["ph"],
-        "rainfall": row["rainfall"],
+        input_df = pd.DataFrame([{
 
-    }])
+            "N": row["N"],
 
-    prediction = crop_model.predict(input_df)
+            "P": row["P"],
 
-    crop = label_encoder.inverse_transform(prediction)[0]
+            "K": row["K"],
 
-    confidence = round(
-        max(crop_model.predict_proba(input_df)[0]) * 100,
-        2
-    )
+            "temperature": row["temperature"],
 
-    return JsonResponse({
+            "humidity": row["humidity"],
 
-        "recommended_crop": crop,
+            "ph": row["ph"],
 
-        "confidence": f"{confidence}%"
+            "rainfall": row["rainfall"],
 
-    })
+        }])
+
+        # Load crop model only when CSV prediction is requested
+        crop_model = get_crop_model()
+        label_encoder = get_label_encoder()
+
+        prediction = crop_model.predict(input_df)
+
+        crop = label_encoder.inverse_transform(
+            prediction
+        )[0]
+
+        confidence = round(
+            max(
+                crop_model.predict_proba(input_df)[0]
+            ) * 100,
+            2
+        )
+
+        return JsonResponse({
+
+            "recommended_crop": crop,
+
+            "confidence": f"{confidence}%"
+
+        })
+
+    except Exception as e:
+
+        return JsonResponse(
+            {"error": str(e)},
+            status=500,
+        )
